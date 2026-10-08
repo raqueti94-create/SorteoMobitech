@@ -315,3 +315,80 @@ function lanzarConfeti() {
 document.getElementById('documentoUsuario').addEventListener('input', function(){
     this.value = this.value.replace(/\D/g, '');
 });
+
+// ==============================================
+// EXPORTAR A EXCEL Y TOTAL DE PREMIOS
+// ==============================================
+
+// Calcular y mostrar el total de premios
+function calcularTotalPremios(registros) {
+    let total = 0;
+    registros.forEach(fila => {
+        const texto = fila.premio;
+        const valor = texto.match(/\$([\d.]+)/);
+        if (valor) {
+            total += parseInt(valor[1].replace(/\./g, ''));
+        }
+    });
+    
+    const formato = new Intl.NumberFormat('es-CO').format(total);
+    document.getElementById('totalPremios').innerHTML = `💰 Total premios: $${formato} COP`;
+}
+
+// Exportar la tabla a Excel
+function exportarExcel() {
+    const tabla = document.getElementById('cuerpoTabla');
+    const filas = tabla.querySelectorAll('tr');
+    
+    let csv = 'Nombre,Documento,Fecha,Hora,Premio\n';
+    
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        if (celdas.length > 0) {
+            const datos = Array.from(celdas).map(celda => `"${celda.textContent}"`);
+            csv += datos.join(',') + '\n';
+        }
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `Sorteo_${mesActual}.csv`;
+    enlace.click();
+    URL.revokeObjectURL(url);
+}
+
+// Reescribir la función para incluir el cálculo del total
+async function cargarTablaAdmin() {
+    const snap = await db.collection('participantes')
+        .where('mes', '==', mesActual)
+        .orderBy('fecha', 'desc')
+        .get();
+
+    const cuerpo = document.getElementById('cuerpoTabla');
+    const registros = [];
+    
+    if (snap.empty) {
+        cuerpo.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:20px;">Sin registros este mes</td></tr>';
+        calcularTotalPremios([]);
+        return;
+    }
+
+    cuerpo.innerHTML = '';
+    snap.forEach(doc => {
+        const d = doc.data();
+        registros.push(d);
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>${d.nombre}</td>
+            <td>${d.documento}</td>
+            <td>${formatearFecha(d.fecha.toDate())}</td>
+            <td>${formatearHora(d.fecha.toDate())}</td>
+            <td>${d.premio}</td>
+        `;
+        cuerpo.appendChild(fila);
+    });
+    
+    calcularTotalPremios(registros);
+}
