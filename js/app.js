@@ -128,9 +128,9 @@ function cerrarModal() {
 // ==============================================
 // VALIDACIONES DE USUARIO
 // ==============================================
-async function documentoYaParticipo(doc) {
+async function documentoYaRegistrado(documento) {
     const snap = await db.collection('participantes')
-        .where('documento', '==', doc)
+        .where('documento', '==', documento)
         .where('mes', '==', mesActual)
         .get();
     return !snap.empty;
