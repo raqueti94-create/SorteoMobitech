@@ -246,16 +246,6 @@ async function voltearCarta(carta, indice) {
 // ==============================================
 // PANEL DE ADMINISTRACIÓN
 // ==============================================
-async function cargarTablaAdmin() {
-    const snap = await db.collection('participantes')
-        .where('mes', '==', mesActual)
-        .orderBy('fecha', 'desc')
-        .get();
-
-    const cuerpo = document.getElementById('cuerpoTabla');
-    if (snap.empty) {
-        cuerpo.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:20px;">Sin registros este mes</td></tr>';
-        return;
     }
 
     cuerpo.innerHTML = '';
@@ -362,21 +352,6 @@ function exportarExcel() {
     enlace.click();
     URL.revokeObjectURL(url);
 }
-
-// Reescribir la función para incluir el cálculo del total
-async function cargarTablaAdmin() {
-    const snap = await db.collection('participantes')
-        .where('mes', '==', mesActual)
-        .orderBy('fecha', 'desc')
-        .get();
-
-    const cuerpo = document.getElementById('cuerpoTabla');
-    const registros = [];
-    
-    if (snap.empty) {
-        cuerpo.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:20px;">Sin registros este mes</td></tr>';
-        calcularTotalPremios([]);
-        return;
     }
 
     cuerpo.innerHTML = '';
