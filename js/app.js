@@ -2,7 +2,7 @@
 // CONFIGURACIÓN — Ya NO se pone la contraseña aquí
 // ==============================================
 const CONFIG = {
-    urlLogo: 'https://i.imgur.com/anPmWf2.jpeg', // Tu enlace de imagen
+    urlLogo: 'WhatsApp Image 2026-10-07 at 4.29.48 PM.jpeg', // Tu enlace de imagen
     premios: [
         '💰 $10.000 COP',
         '💰 $10.000 COP',
