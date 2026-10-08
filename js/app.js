@@ -137,6 +137,7 @@ async function documentoYaParticipo(doc) {
 }
 
 async function verificarYJugar() {
+    // Limpiar y validar nombre
     nombreUsuario = limpiarEspacios(document.getElementById('nombreUsuario').value);
     documentoUsuario = limpiarEspacios(document.getElementById('documentoUsuario').value);
     const aviso = document.getElementById('mensajeAviso');
@@ -145,12 +146,22 @@ async function verificarYJugar() {
         aviso.textContent = '⚠️ Escribe tu nombre completo';
         return;
     }
+    if (nombreUsuario.length < 5) {
+        aviso.textContent = '⚠️ Escribe tu nombre completo, no iniciales';
+        return;
+    }
     if (!documentoUsuario) {
         aviso.textContent = '⚠️ Escribe tu número de documento';
         return;
     }
+    // Solo números
     if (!/^\d+$/.test(documentoUsuario)) {
-        aviso.textContent = '⚠️ Solo números en el documento';
+        aviso.textContent = '⚠️ Solo usa números, sin puntos ni espacios';
+        return;
+    }
+    // Longitud válida en Colombia
+    if (documentoUsuario.length < 6 || documentoUsuario.length > 12) {
+        aviso.textContent = '⚠️ El documento debe tener entre 6 y 12 dígitos';
         return;
     }
 
@@ -170,7 +181,6 @@ async function verificarYJugar() {
     generarCartas();
     mostrarPantalla('pantallaJuego');
 }
-
 // ==============================================
 // CARTAS Y JUEGO
 // ==============================================
