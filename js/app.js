@@ -1,5 +1,5 @@
 // ==============================================
-// CONFIGURACIÓN — Ya NO se pone la contraseña aquí
+// CONFIGURACIÓN
 // ==============================================
 const CONFIG = {
     urlLogo: 'WhatsApp Image 2026-10-07 at 4.29.48 PM.jpeg',
@@ -37,7 +37,6 @@ let premiosMezclados = [];
 let mesesDisponibles = [];
 let mesSeleccionado;
 
-// Obtener mes actual en formato "2026-10"
 function obtenerMesActual() {
     const hoy = new Date();
     const anio = hoy.getFullYear();
@@ -81,20 +80,20 @@ function mezclarPremios(lista) {
     return arr;
 }
 function formatearFecha(fecha) {
-    const d = fecha.getDate().toString().padStart(2,'0');
-    const m = (fecha.getMonth()+1).toString().padStart(2,'0');
+    const d = fecha.getDate().toString().padStart(2, '0');
+    const m = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const a = fecha.getFullYear();
     return `${d}/${m}/${a}`;
 }
 function formatearHora(fecha) {
-    const h = fecha.getHours().toString().padStart(2,'0');
-    const min = fecha.getMinutes().toString().padStart(2,'0');
+    const h = fecha.getHours().toString().padStart(2, '0');
+    const min = fecha.getMinutes().toString().padStart(2, '0');
     return `${h}:${min}`;
 }
 function formatearNombreMes(codigo) {
     const [anio, mes] = codigo.split('-');
-    const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    return `${nombres[parseInt(mes)-1]} ${anio}`;
+    const nombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return `${nombres[parseInt(mes) - 1]} ${anio}`;
 }
 function limpiarEspacios(texto) {
     return texto.replace(/\s+/g, ' ').trim();
@@ -342,10 +341,10 @@ function lanzarConfeti() {
         const f = document.createElement('div');
         f.style.cssText = `
             position:absolute; width:10px; height:16px;
-            background:${colores[Math.floor(Math.random()*colores.length)]};
-            left:${Math.random()*100}%; top:-20px;
-            animation: caer ${1.5+Math.random()}s linear forwards;
-            animation-delay:${Math.random()*0.5}s;
+            background:${colores[Math.floor(Math.random() * colores.length)]};
+            left:${Math.random() * 100}%; top:-20px;
+            animation: caer ${1.5 + Math.random()}s linear forwards;
+            animation-delay:${Math.random() * 0.5}s;
         `;
         c.appendChild(f);
     }
@@ -355,7 +354,6 @@ function lanzarConfeti() {
     setTimeout(() => { c.remove(); s.remove(); }, 3000);
 }
 
-// Bloquear letras en documento
-document.getElementById('documentoUsuario').addEventListener('input', function(){
+document.getElementById('documentoUsuario').addEventListener('input', function() {
     this.value = this.value.replace(/\D/g, '');
 });
