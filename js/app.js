@@ -392,3 +392,146 @@ async function cargarTablaAdmin() {
     
     calcularTotalPremios(registros);
 }
+
+// ==============================================
+// HISTORIAL DE MESES
+// ==============================================
+
+// Almacenar lista de meses disponibles
+let mesesDisponibles = [];
+let mesSeleccionado = mesActual;
+
+// Obtener mes actual en formato "2026-10"
+function obtenerMesActual() {
+    const hoy = new Date();
+    const anio = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    return `${anio}-${mes}`;
+}
+
+mesActual = obtenerMesActual();
+mesSeleccionado = mesActual;
+
+// Cargar todos los meses con registros
+async function cargarSelectorMeses() {
+    const snap = await db.collection('participantes').orderBy('fecha').get();
+    const meses = new Set();
+    
+    snap.forEach(doc => {
+        const fecha = doc.data().fecha.toDate();
+        const etiquetaMes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+        meses.add(etiquetaMes);
+    });
+    
+    // Convertir a lista y ordenar del más reciente al más antiguo
+    mesesDisponibles = Array.from(meses).sort().reverse();
+    
+    // Si no hay meses, agregar el actual
+    if (mesesDisponibles.length === 0) {
+        mesesDisponibles.push(mesActual);
+    }
+    
+    // Llenar el selector
+    const selector = document.getElementById('selectorMes');
+    selector.innerHTML = '';
+    mesesDisponibles.forEach(m => {
+        const opcion = document.createElement('option');
+        opcion.value = m;
+        opcion.textContent = formatearNombreMes(m);
+        if (m === mesSeleccionado) opcion.selected = true;
+        selector.appendChild(opcion);
+    });
+}
+
+// Formatear mes para mostrar: "Octubre 2026"
+function formatearNombreMes(codigo) {
+    const [anio, mes] = codigo.split('-');
+    const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    return `${nombres[parseInt(mes)-1]} ${anio}`;
+}
+
+// Cambiar de mes y recargar tabla
+async function cambiarMes() {
+    const selector = document.getElementById('selectorMes');
+    mesSeleccionado = selector.value;
+    await cargarTablaAdmin();
+}
+
+// Reescribir cargarTablaAdmin para usar el mes seleccionado
+async function cargarTablaAdmin() {
+    const snap = await db.collection('participantes')
+        .where('mes', '==', mesSeleccionado)
+        .orderBy('fecha', 'desc')
+        .get();
+
+    const cuerpo = document.getElementById('cuerpoTabla');
+    const registros = [];
+    
+    if (snap.empty) {
+        cuerpo.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:20px;">Sin registros para este mes</td></tr>';
+        calcularTotalPremios([]);
+        return;
+    }
+
+    cuerpo.innerHTML = '';
+    snap.forEach(doc => {
+        const d = doc.data();
+        registros.push(d);
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>${d.nombre}</td>
+            <td>${d.documento}</td>
+            <td>${formatearFecha(d.fecha.toDate())}</td>
+            <td>${formatearHora(d.fecha.toDate())}</td>
+            <td>${d.premio}</td>
+        `;
+        cuerpo.appendChild(fila);
+    });
+    
+    calcularTotalPremios(registros);
+}
+
+// Modificar el guardado para incluir el campo "mes"
+const guardarRegistroOriginal = null; // Reemplazamos la función completa
+async function guardarRegistro(nombre, documento, premio) {
+    try {
+        await db.collection('participantes').add({
+            nombre: nombre,
+            documento: documento,
+            premio: premio,
+            fecha: new Date(),
+            mes: mesActual
+        });
+        return true;
+    } catch (error) {
+        console.error("Error al guardar:", error);
+        return false;
+    }
+}
+
+// Cargar meses al entrar al panel
+const cargarPanelOriginal = null;
+async function cargarPanelAdmin() {
+    await cargarSelectorMeses();
+    await cargarTablaAdmin();
+}
+
+// Actualizar la función de acceso para llamar la nueva carga
+const validarClaveAnterior = validarClave;
+async function validarClave() {
+    const claveIngresada = document.getElementById('claveAdmin').value;
+    try {
+        const doc = await db.collection('configuracion').doc('seguridad').get();
+        if (doc.exists && doc.data().claveAdmin === claveIngresada) {
+            document.getElementById('modalLogin').classList.add('oculto');
+            document.getElementById('pantallaInicio').classList.add('oculto');
+            document.getElementById('pantallaAdmin').classList.remove('oculto');
+            await cargarPanelAdmin(); // Carga meses + tabla
+        } else {
+            alert('🔑 Contraseña incorrecta');
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert('⚠️ Error al verificar la contraseña');
+    }
+}
