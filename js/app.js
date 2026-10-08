@@ -136,6 +136,10 @@ async function documentoYaRegistrado(documento) {
     return !snap.empty;
 }
 
+//PEGA ESTA LINEA
+const documentoYaParticipo = documento YaRegistrado
+
+
 async function verificarYJugar() {
     // Limpiar y validar nombre
     nombreUsuario = limpiarEspacios(document.getElementById('nombreUsuario').value);
