@@ -56,15 +56,25 @@ async function validarClave() {
         const doc = await db.collection('configuracion').doc('seguridad').get();
         if (doc.exists && doc.data().claveAdmin === claveIngresada) {
             cerrarModal();
+            
+            // Ocultar inicio
+            document.getElementById('pantallaInicio').classList.remove('activa');
             document.getElementById('pantallaInicio').classList.add('oculto');
-            document.getElementById('pantallaAdmin').classList.remove('oculto');
+            
+            // Mostrar panel admin
+            const panel = document.getElementById('pantallaAdmin');
+            panel.classList.remove('oculto');
+            panel.classList.add('activa');
+            
+            // Cargar datos
             await cargarPanelAdmin();
+            
         } else {
             alert('🔑 Contraseña incorrecta');
         }
     } catch (error) {
         console.error("Error:", error);
-        alert('⚠️ Error al verificar la contraseña');
+        alert('⚠️ Error: ' + error.message);
     }
 }
 
