@@ -1,9 +1,8 @@
 // ==============================================
-// CONFIGURACIÓN - MODIFICA AQUÍ LO NECESARIO
+// CONFIGURACIÓN — Ya NO se pone la contraseña aquí
 // ==============================================
 const CONFIG = {
-    claveAdmin: 'Heiro2508',
-    urlLogo: 'https://i.imgur.com/anPmWf2.jpeg', // ← Pega tu enlace de imagen
+    urlLogo: 'https://i.imgur.com/anPmWf2.jpeg', // Tu enlace de imagen
     premios: [
         '💰 $10.000 COP',
         '💰 $10.000 COP',
@@ -37,6 +36,32 @@ let documentoUsuario = '';
 let yaJugado = false;
 let mesActual = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
 let premiosMezclados = [];
+
+// ==============================================
+// VALIDACIÓN SEGURA — Lee la contraseña de Firebase
+// ==============================================
+async function validarClave() {
+    const claveIngresada = document.getElementById('claveAdmin').value;
+    const modal = document.getElementById('modalLogin');
+    
+    // Obtener la contraseña guardada en Firebase
+    const docSeguridad = await db.collection('configuracion').doc('seguridad').get();
+    
+    if (!docSeguridad.exists) {
+        alert('⚠️ Configuración no encontrada en Firebase');
+        return;
+    }
+    
+    const claveGuardada = docSeguridad.data().claveAdmin;
+    
+    if (claveIngresada === claveGuardada) {
+        cerrarModal();
+        await cargarTablaAdmin();
+        mostrarPantalla('pantallaAdmin');
+    } else {
+        alert('❌ Contraseña incorrecta');
+    }
+}
 
 // ==============================================
 // FUNCIONES DE UTILIDAD
@@ -101,7 +126,7 @@ function cerrarModal() {
 }
 
 // ==============================================
-// VALIDACIONES
+// VALIDACIONES DE USUARIO
 // ==============================================
 async function documentoYaParticipo(doc) {
     const snap = await db.collection('participantes')
@@ -188,7 +213,6 @@ async function voltearCarta(carta, indice) {
         lanzarConfeti();
     }
 
-    // Guardar en base de datos
     await db.collection('participantes').add({
         nombre: nombreUsuario,
         documento: documentoUsuario,
@@ -197,7 +221,6 @@ async function voltearCarta(carta, indice) {
         mes: mesActual
     });
 
-    // Mostrar resultado
     setTimeout(() => {
         const caja = document.getElementById('cajaResultado');
         caja.innerHTML = `🎉 ¡Felicidades, ${nombreUsuario}!<br>Ganaste: <strong>${premioGanado}</strong>`;
@@ -209,17 +232,6 @@ async function voltearCarta(carta, indice) {
 // ==============================================
 // PANEL DE ADMINISTRACIÓN
 // ==============================================
-async function validarClave() {
-    const clave = document.getElementById('claveAdmin').value;
-    if (clave === CONFIG.claveAdmin) {
-        cerrarModal();
-        await cargarTablaAdmin();
-        mostrarPantalla('pantallaAdmin');
-    } else {
-        alert('❌ Contraseña incorrecta');
-    }
-}
-
 async function cargarTablaAdmin() {
     const snap = await db.collection('participantes')
         .where('mes', '==', mesActual)
