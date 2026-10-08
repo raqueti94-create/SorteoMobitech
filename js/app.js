@@ -137,7 +137,7 @@ async function documentoYaRegistrado(documento) {
 }
 
 //PEGA ESTA LINEA
-const documentoYaParticipo = documento YaRegistrado
+const documentoYaParticipo = documentoYaRegistrado
 
 
 async function verificarYJugar() {
