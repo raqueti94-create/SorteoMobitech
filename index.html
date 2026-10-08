@@ -44,24 +44,34 @@
         <button class="btn-secundario" onclick="volverInicio()">← Volver al Inicio</button>
     </div>
 
-    <!-- PANEL ADMINISTRATIVO -->
-    <div id="pantallaAdmin" class="pantalla">
-        <h2>📊 Panel de Administración</h2>
-        <table id="tablaAdmin">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Documento</th>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Premio</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpoTabla"></tbody>
-        </table>
+   <div id="pantallaAdmin" class="pantalla">
+    <h2>📋 Panel de Administración</h2>
+    
+    <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <button onclick="exportarExcel()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📥 Exportar a Excel
+        </button>
         <button class="btn-peligro" onclick="confirmarReinicio()">🗑️ Reiniciar Mes</button>
-        <button class="btn-secundario" onclick="volverInicio()">← Volver</button>
+        <div id="totalPremios" style="margin-left: auto; padding: 10px 20px; background: #fef3c7; border-radius: 6px; font-weight: bold; color: #92400e;">
+            💰 Total premios: $0
+        </div>
     </div>
+
+    <table id="tablaAdmin">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Documento</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Premio</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla"></tbody>
+    </table>
+    
+    <button class="btn-secundario" onclick="volverInicio()">🔙 Volver al inicio</button>
+</div>
 
     <!-- MODAL DE LOGIN -->
     <div id="modalLogin" class="modal oculto">
