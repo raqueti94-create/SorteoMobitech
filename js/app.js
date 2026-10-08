@@ -530,7 +530,10 @@ async function validarClave() {
             document.getElementById('modalLogin').classList.add('oculto');
             document.getElementById('pantallaInicio').classList.add('oculto');
             document.getElementById('pantallaAdmin').classList.remove('oculto');
-            await cargarPanelAdmin(); // Carga meses + tabla
+            
+            // ✅ Carga TODO: meses + tabla + total
+            await cargarPanelAdmin();
+            
         } else {
             alert('🔑 Contraseña incorrecta');
         }
