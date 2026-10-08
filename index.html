@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 Sorteo de Premios — Mobitech Group</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <h1>🎁 Sorteo de Premios — Mobitech Group</h1>
+
+    <!-- PANTALLA DE INICIO -->
+    <div id="pantallaInicio" class="pantalla activa">
+        <div class="caja-bienvenida">
+            <h2>¡Bienvenido!</h2>
+            <p>Participa y gana increíbles premios 🎉</p>
+            <button class="btn-principal" onclick="mostrarFormulario()">🎴 Participar</button>
+            <div class="acceso-admin">
+                <a href="#" onclick="mostrarLoginAdmin()">🔐 Acceso Administración</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO DE PARTICIPACIÓN -->
+    <div id="pantallaFormulario" class="pantalla">
+        <div class="contenedor-formulario">
+            <h3>Ingresa tus datos</h3>
+            <input type="text" id="nombreUsuario" placeholder="Tu nombre completo" autocomplete="name">
+            <input type="text" id="documentoUsuario" placeholder="Tu número de documento" autocomplete="off" inputmode="numeric">
+            <p class="mensaje-aviso" id="mensajeAviso"></p>
+            <button class="btn-principal" onclick="verificarYJugar()">Comenzar</button>
+            <button class="btn-secundario" onclick="volverInicio()">← Volver</button>
+            <p class="cargando" id="cargando">Verificando...</p>
+        </div>
+    </div>
+
+    <!-- ZONA DE CARTAS -->
+    <div id="pantallaJuego" class="pantalla">
+        <p class="saludo" id="saludoUsuario"></p>
+        <p class="instruccion">Elige una carta para revelar tu premio 🎁</p>
+        <div class="grid-cartas" id="contenedorCartas"></div>
+        <div class="resultado" id="cajaResultado"></div>
+        <p class="estado" id="estadoJuego"></p>
+        <button class="btn-secundario" onclick="volverInicio()">← Volver al Inicio</button>
+    </div>
+
+    <!-- PANEL ADMINISTRATIVO -->
+    <div id="pantallaAdmin" class="pantalla">
+        <h2>📊 Panel de Administración</h2>
+        <table id="tablaAdmin">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Premio</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla"></tbody>
+        </table>
+        <button class="btn-peligro" onclick="confirmarReinicio()">🗑️ Reiniciar Mes</button>
+        <button class="btn-secundario" onclick="volverInicio()">← Volver</button>
+    </div>
+
+    <!-- MODAL DE LOGIN -->
+    <div id="modalLogin" class="modal oculto">
+        <div class="modal-contenido">
+            <h3>🔐 Acceso de Administración</h3>
+            <input type="password" id="claveAdmin" placeholder="Escribe la contraseña">
+            <div class="botones-modal">
+                <button class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn-principal" onclick="validarClave()">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
