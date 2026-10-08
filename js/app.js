@@ -310,3 +310,8 @@ function lanzarConfeti() {
     document.head.appendChild(estilo);
     setTimeout(() => { contenedor.remove(); estilo.remove(); }, 3000);
 }
+
+// Bloquear letras en el campo documento
+document.getElementById('documentoUsuario').addEventListener('input', function(){
+    this.value = this.value.replace(/\D/g, '');
+});
