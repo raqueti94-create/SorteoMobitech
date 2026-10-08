@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 Sorteo de Premios — Mobitech Group</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+        body{min-height:100vh;display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);padding:20px}
+        h1{color:#fff;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.3);text-align:center;font-size:22px}
+        .saludo{color:#ffd700;font-size:22px;font-weight:700;margin-bottom:25px;text-shadow:1px 1px 3px rgba(0,0,0,.4)}
+        .oculto{display:none !important}
+
+        /* PANTALLA DE INICIO */
+        .inicio-contenedor{display:flex;flex-direction:column;align-items:center;gap:30px;margin-top:40px;width:100%;max-width:500px}
+        .caja-bienvenida{background:#fff;padding:40px 30px;border-radius:15px;box-shadow:0 8px 30px rgba(0,0,0,.2);text-align:center;width:100%}
+        .caja-bienvenida h2{color:#1e3c72;margin-bottom:15px}
+        .boton-participar,.boton-admin{width:100%;padding:16px;font-size:18px;font-weight:700;border:none;border-radius:12px;cursor:pointer;transition:all .2s;margin:8px 0}
+        .boton-participar{background:linear-gradient(135deg,#ffd700 0%,#ffed4e 100%);color:#1e3c72;box-shadow:0 4px 0 #cc9900}
+        .boton-participar:hover{transform:translateY(-2px);box-shadow:0 6px 0 #cc9900}
+        .boton-admin{background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;box-shadow:0 4px 0 #a71d2a}
+        .boton-admin:hover{transform:translateY(-2px);box-shadow:0 6px 0 #a71d2a}
+        .acceso-admin{margin-top:15px;text-align:center}
+        .link-admin{color:#ffd700;cursor:pointer;text-decoration:underline;font-size:15px}
+
+        /* FORMULARIO NOMBRE + DOCUMENTO */
+        .form-nombre{background:#fff;padding:30px;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,.2);max-width:420px;width:100%;text-align:center;margin-top:20px}
+        .form-nombre h3{margin-bottom:20px;color:#1e3c72}
+        .form-nombre input{width:100%;padding:14px;margin:10px 0;border:2px solid #ddd;border-radius:8px;font-size:16px}
+        button{padding:14px 35px;font-size:18px;font-weight:700;background:linear-gradient(135deg,#ffd700 0%,#ffed4e 100%);border:none;border-radius:50px;cursor:pointer;color:#1e3c72;box-shadow:0 4px 0 #cc9900;transition:all .15s ease}
+        button:hover{transform:translateY(-2px)}
+        .boton-volver{background:#6c757d;color:#fff;box-shadow:0 4px 0 #545b62;margin-top:15px}
+        .boton-volver:hover{box-shadow:0 6px 0 #545b62}
+        .aviso-form{color:#dc3545;margin-top:10px;font-size:14px;min-height:20px}
+
+        /* CARTAS — 10 cartas: 5 en fila en pantallas medianas */
+        .contenedor-cartas{max-width:700px;width:100%;margin-top:20px}
+        .mensaje-instruccion{color:#fff;text-align:center;margin-bottom:20px;font-size:18px}
+        .grid-cartas{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+        @media (max-width:600px){.grid-cartas{grid-template-columns:repeat(5,1fr);gap:8px}}
+        @media (max-width:450px){.grid-cartas{grid-template-columns:repeat(2,1fr);gap:10px}}
+
+        .carta{aspect-ratio:3/4;perspective:1000px;cursor:pointer;position:relative;z-index:1}
+        .carta-desactivada{cursor:not-allowed;opacity:.7}
+
+        .carta .brillo-fondo{
+            position:absolute;inset:-20px;border-radius:20px;
+            background:radial-gradient(circle, rgba(255,215,0,.9) 0%, rgba(255,215,0,.4) 45%, transparent 70%);
+            opacity:0;z-index:0;filter:blur(25px);transition:opacity .3s ease;
+        }
+        .carta.seleccionada .brillo-fondo{opacity:1;animation:latidoBrillo 1.2s infinite ease-in-out}
+
+        .carta .borde-brillante{
+            position:absolute;inset:-8px;border-radius:18px;border:4px solid transparent;
+            background:linear-gradient(90deg,#ffd700,#fff,#ffd700) border-box;
+            -webkit-mask:linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite:xor;mask-composite:exclude;opacity:0;z-index:1;transition:opacity .3s ease;
+        }
+        .carta.seleccionada .borde-brillante{opacity:1;animation:bordeGiratorio 2.5s linear infinite}
+
+        .carta-interior{
+            position:relative;width:100%;height:100%;text-align:center;
+            transition:transform .6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style:preserve-3d;box-shadow:0 4px 12px rgba(0,0,0,.3);
+            border-radius:12px;z-index:2;background:#fff;
+        }
+        .carta-volteada .carta-interior{transform:rotateY(180deg)}
+        .carta.seleccionada{z-index:100}
+        .carta.seleccionada .carta-interior{transform:scale(1.25) rotateY(180deg);box-shadow:0 20px 50px rgba(255,215,0,.7)}
+
+        .carta-frente,.carta-atras{
+            position:absolute;width:100%;height:100%;-webkit-backface-visibility:hidden;backface-visibility:hidden;
+            border-radius:12px;display:flex;align-items:center;justify-content:center;padding:6px;
+        }
+        .carta-frente{background:linear-gradient(145deg,#ffffff 0%, #f8f8f8 100%);border:3px solid #e5e5e5}
+        .logo-carta-img{width:85%;height:auto;object-fit:contain}
+        .carta-atras{background:#fff;transform:rotateY(180deg);flex-direction:column;border:3px solid #ffd700}
+        .premio-texto{font-size:11px;font-weight:700;color:#1e3c72;text-align:center;line-height:1.3}
+        .premio-ganado{color:#28a745;font-weight:900}
+
+        .lluvia-emojis{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden}
+        .emoji-lluvia{position:absolute;top:-50px;font-size:28px;animation:caerEmoji 3s linear forwards}
+        .corneta{position:fixed;top:50%;left:50%;font-size:52px;z-index:1001;opacity:0;transform:translate(-50%,-50%) scale(.5);transition:all .5s ease}
+        .corneta.activa{opacity:1;transform:translate(-50%,-50%) scale(1.2);animation:shake .35s ease-in-out}
+        .confeti{position:fixed;inset:0;pointer-events:none;z-index:1002;overflow:hidden}
+        .confeti-pieza{position:absolute;width:10px;height:16px;background:linear-gradient(45deg,#ffd700,#ff4444,#44ff44,#4488ff);animation:caerConfeti 1.8s ease-in forwards}
+        .resultado-final{margin-top:25px;padding:20px;background:rgba(255,255,255,.95);border-radius:12px;text-align:center;font-size:20px;font-weight:700;color:#1e3c72;opacity:0;transition:opacity .6s ease}
+        .resultado-final.visible{opacity:1}
+        .aviso{color:#ffd700;margin-top:15px;font-size:15px;text-align:center}
+
+        /* PANEL ADMIN */
+        .panel-admin{background:#fff;padding:30px;border-radius:15px;box-shadow:0 8px 30px rgba(0,0,0,.2);width:100%;max-width:1000px;margin-top:20px;overflow-x:auto}
+        .panel-admin h2{text-align:center;color:#1e3c72;margin-bottom:20px}
+        .panel-admin table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+        .panel-admin th{background:#1e3c72;color:#fff;padding:10px 6px;text-align:center}
+        .panel-admin td{padding:10px 6px;border-bottom:1px solid #eee;color:#333;text-align:center}
+        .panel-admin tr:nth-child(even){background:#f4f6f9}
+        .panel-admin .sin-registros{text-align:center;color:#888;padding:25px;font-style:italic}
+        .boton-reiniciar{background:#dc3545;color:#fff;box-shadow:0 4px 0 #a71d2a;margin-top:20px;width:100%}
+        .boton-reiniciar:hover{box-shadow:0 6px 0 #a71d2a}
+
+        /* MODAL CONTRASEÑA */
+        .modal-fondo{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000}
+        .modal-caja{background:#fff;padding:30px;border-radius:15px;max-width:380px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+        .modal-caja h3{margin-bottom:20px;color:#1e3c72}
+        .modal-caja input{width:100%;padding:14px;margin:12px 0;border:2px solid #ddd;border-radius:8px;font-size:16px}
+        .modal-botones{display:flex;gap:12px;justify-content:center;margin-top:15px}
+        .btn-cancelar{background:#e9ecef;color:#495057;box-shadow:0 4px 0 #ced4da}
+        .btn-cancelar:hover{box-shadow:0 6px 0 #ced4da}
+        .cargando{color:#ffd700;text-align:center;padding:15px}
+
+        @keyframes latidoBrillo{0%{transform:scale(1);opacity:.85}50%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:.85}}
+        @keyframes bordeGiratorio{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        @keyframes caerEmoji{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(360deg);opacity:0}}
+        @keyframes shake{0%{transform:translate(-50%,-50%) scale(1.2) rotate(0deg)}25%{transform:translate(-50%,-50%) scale(1.2) rotate(-8deg)}50%{transform:translate(-50%,-50%) scale(1.2) rotate(8deg)}75%{transform:translate(-50%,-50%) scale(1.2) rotate(-8deg)}100%{transform:translate(-50%,-50%) scale(1.2) rotate(0deg)}}
+        @keyframes caerConfeti{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+    </style>
+</head>
+<body>
+    <h1>🎁 Sorteo de Premios — Mobitech Group</h1>
+
+    <!-- PANTALLA DE INICIO -->
+    <div id="pantallaInicio" class="inicio-contenedor">
+        <div class="caja-bienvenida">
+            <h2>¡Bienvenido!</h2>
+            <p style="color:#666;margin-bottom:25px">¿Qué deseas hacer?</p>
+            <button class="boton-participar" onclick="mostrarFormulario()">🎴 Participar en el Sorteo</button>
+            <div class="acceso-admin">
+                <span class="link-admin" onclick="pedirContrasena()">🔐 Acceso de Administración</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO: NOMBRE + DOCUMENTO -->
+    <div id="formularioNombre" class="form-nombre oculto">
+        <h3>Ingresa tus datos para participar 🎉</h3>
+        <input type="text" id="nombreUsuario" placeholder="Tu nombre completo" autocomplete="name">
+        <input type="text" id="documentoUsuario" placeholder="Tu número de documento" autocomplete="off" inputmode="numeric">
+        <p class="aviso-form" id="avisoForm"></p>
+        <button onclick="verificarYJugar()">Comenzar</button>
+        <br>
+        <button class="boton-volver" onclick="volverInicio()">← Volver</button>
+        <p class="cargando oculto" id="cargando">Verificando...</p>
+    </div>
+
+    <!-- ZONA DE JUEGO (CARTAS) -->
+    <div id="zonaJuego" class="oculto" style="width:100%;max-width:700px">
+        <p class="saludo" id="mensajeBienvenida"></p>
+        <p class="mensaje-instruccion" id="instruccion">Elige una carta para revelar tu premio 🎁</p>
+        <div class="grid-cartas" id="contenedorTarjetas"></div>
+        <div class="resultado-final" id="resultadoFinal"></div>
+        <p class="aviso" id="textoEstado"></p>
+        <button class="boton-volver" onclick="volverInicio()">← Volver al Inicio</button>
+    </div>
+
+    <!-- PANEL ADMINISTRATIVO -->
+    <div id="panelAdmin" class="panel-admin oculto">
+        <h2>📊 Panel de Administración</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Premio</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla"></tbody>
+        </table>
+        <button class="boton-reiniciar" onclick="confirmarReinicio()">🗑️ Reiniciar Mes Actual</button>
+        <button class="boton-volver" style="width:100%" onclick="volverInicio()">← Volver al Inicio</button>
+    </div>
+
+    <!-- MODAL CONTRASEÑA -->
+    <div id="modalPass" class="modal-fondo oculto">
+        <div class="modal-caja">
+            <h3>🔐 Acceso de Administración</h3>
+            <input type="password" id="inputPass" placeholder="Escribe tu contraseña">
+            <div class="modal-botones">
+                <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+                <button onclick="validarPass()">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDORES DE ANIMACIÓN -->
+    <div id="lluviaEmojis" class="lluvia-emojis"></div>
+    <div id="corneta" class="corneta">📣</div>
+    <div id="confeti" class="confeti"></div>
+
+    <script>
+        // ==================================================
+        // CONFIGURACIÓN
+        // ==================================================
+        const CONFIG = {
+            contrasenaAdmin: 'Heiro2508',
+            // ⚠️ Pega aquí el enlace DIRECTO de la imagen (termina en .jpeg, .png, etc.)
+            logoUrl: 'https://i.imgur.com/anPmWf2.jpeg',
+            // 🎯 PREMIOS AJUSTADOS: 10 en total
+            premiosBase: (function() {
+                const lista = [];
+                for(let i=1; i<=6; i++) lista.push('💰 $10.000 COP');   // 6 de 10.000
+                for(let i=1; i<=3; i++) lista.push('💵 $20.000 COP');    // 3 de 20.000
+                lista.push('👑 $50.000 COP');                             // 1 de 50.000
+                return lista;
+            })(),
+            firebase: {
+                apiKey: "AIzaSyDUyRp66r4AwqVfT-1t8DTGPxoPrJf73Uo",
+                authDomain: "sorteo-b5f23.firebaseapp.com",
+                projectId: "sorteo-b5f23",
+                storageBucket: "sorteo-b5f23.firebasestorage.app",
+                messagingSenderId: "951880297325",
+                appId: "1:951880297325:web:c136fe8733cfeb5ac98864"
+            }
+        };
+
+        // ==================================================
+        const app = firebase.initializeApp(CONFIG.firebase);
+        const db = firebase.firestore(app);
+        let nombreUsuario = '';
+        let documentoUsuario = '';
+        let yaJuego = false;
+        let mesActual = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+        let premiosMezclados = [];
+
+        // Mezclar premios (Fisher-Yates)
+        function mezclarPremios(lista) {
+            const arr = [...lista];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function formatearFecha(f) {
+            const d = f.getDate().toString().padStart(2,'0');
+            const m = (f.getMonth()+1).toString().padStart(2,'0');
+            return `${d}/${m}/${f.getFullYear()}`;
+        }
+        function formatearHora(f) {
+            const h = f.getHours().toString().padStart(2,'0');
+            const m = f.getMinutes().toString().padStart(2,'0');
+            return `${h}:${m}`;
+        }
+
+        // Cargar registros del mes actual
+        async function cargarHistorial() {
+            const snap = await db.collection('sorteos').doc(mesActual).get();
+            return snap.exists ? snap.data().registros || [] : [];
+        }
+
+        // Verificar si el documento ya jugó
+        async function documentoYaJugado(doc) {
+            const registros = await cargarHistorial();
+            return registros.some(r => r.documento === doc);
+        }
+
+        // Guardar registro
+        async function guardarRegistro(reg) {
+            const ref = db.collection('sorteos').doc(mesActual);
+            const registros = await cargarHistorial();
+            registros.push(reg);
+            await ref.set({ registros, actualizado: new Date() }, { merge: true });
+            await renderTabla();
+        }
+
+        // ==================================================
+        // NAVEGACIÓN Y FLUJO
+        // ==================================================
+        function volverInicio() {
+            document.getElementById('pantallaInicio').classList.remove('oculto');
+            document.getElementById('formularioNombre').classList.add('oculto');
+            document.getElementById('zonaJuego').classList.add('oculto');
+            document.getElementById('panelAdmin').classList.add('oculto');
+            nombreUsuario = '';
+            documentoUsuario = '';
+            yaJuego = false;
+            premiosMezclados = [];
+            document.getElementById('avisoForm').textContent = '';
+            document.getElementById('nombreUsuario').value = '';
+            document.getElementById('documentoUsuario').value = '';
+            limpiarAnimaciones();
+        }
+
+        function mostrarFormulario() {
+            document.getElementById('pantallaInicio').classList.add('oculto');
+            document.getElementById('formularioNombre').classList.remove('oculto');
+            document.getElementById('avisoForm').textContent = '';
+        }
+
+        // Verificar documento antes de jugar
+        async function verificarYJugar() {
+            nombreUsuario = document.getElementById('nombreUsuario').value.trim();
+            documentoUsuario = document.getElementById('documentoUsuario').value.trim();
+            const aviso = document.getElementById('avisoForm');
+
+            if (!nombreUsuario) {
+                aviso.textContent = '⚠️ Escribe tu nombre por favor';
+                return;
+            }
+            if (!documentoUsuario) {
+                aviso.textContent = '⚠️ Escribe tu número de documento';
+                return;
+            }
+
+            document.getElementById('cargando').classList.remove('oculto');
+            aviso.textContent = '';
+
+            const repetido = await documentoYaJugado(documentoUsuario);
+            document.getElementById('cargando').classList.add('oculto');
+
+            if (repetido) {
+                aviso.textContent = '🚫 Este documento ya participó. Solo se permite una participación por persona.';
+                aviso.style.color = '#dc3545';
+                return;
+            }
+
+            // Mezclar premios para este jugador
+            premiosMezclados = mezclarPremios(CONFIG.premiosBase);
+
+            document.getElementById('formularioNombre').classList.add('oculto');
+            document.getElementById('zonaJuego').classList.remove('oculto');
+            document.getElementById('mensajeBienvenida').textContent = `¡Hola, ${nombreUsuario}! 👋`;
+            generarCartas();
+        }
+
+        // Admin
+        function pedirContrasena() {
+            document.getElementById('modalPass').classList.remove('oculto');
+            document.getElementById('inputPass').value = '';
+            document.getElementById('inputPass').focus();
+        }
+        function cerrarModal() {
+            document.getElementById('modalPass').classList.add('oculto');
+        }
+        async function validarPass() {
+            const pass = document.getElementById('inputPass').value;
+            if (pass === CONFIG.contrasenaAdmin) {
+                cerrarModal();
+                document.getElementById('pantallaInicio').classList.add('oculto');
+                document.getElementById('panelAdmin').classList.remove('oculto');
+                mesActual = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+                await renderTabla();
+            } else {
+                alert('❌ Contraseña incorrecta');
+            }
+        }
+
+        // Tabla admin
+        async function renderTabla() {
+            const cuerpo = document.getElementById('cuerpoTabla');
+            const snap = await db.collection('sorteos').doc(mesActual).get();
+            
+            if (!snap.exists) {
+                cuerpo.innerHTML = '<tr><td colspan="5" class="sin-registros">Sin registros este mes</td></tr>';
+                return;
+            }
+            
+            const hist = snap.data().registros || [];
+            if (!hist.length) {
+                cuerpo.innerHTML = '<tr><td colspan="5" class="sin-registros">Sin registros este mes</td></tr>';
+                return;
+            }
+            
+            cuerpo.innerHTML = hist.map(r =>
+                `<tr>
+                    <td>${r.usuario}</td>
+                    <td>${r.documento}</td>
+                    <td>${r.fecha}</td>
+                    <td>${r.hora}</td>
+                    <td>${r.premio}</td>
+                </tr>`
+            ).reverse().join('');
+        }
+
+        async function reiniciarMes() {
+            if (confirm('⚠️ ¿Borrar TODOS los registros del mes actual? Esta acción no se puede deshacer.')) {
+                await db.collection('sorteos').doc(mesActual).set({
+                    registros: [],
+                    reiniciado: new Date()
+                });
+                alert('✅ Mes reiniciado. Ahora pueden participar nuevas personas.');
+                await renderTabla();
+            }
+        }
+        function confirmarReinicio() {
+            reiniciarMes();
+        }
+
+        // ==================================================
+        // CARTAS Y JUEGO con IMAGEN en el reverso
+        // ==================================================
+        function generarCartas() {
+            const c = document.getElementById('contenedorTarjetas');
+            c.innerHTML = '';
+            premiosMezclados.forEach((p, i) => {
+                const carta = document.createElement('div');
+                carta.className = 'carta';
+                carta.dataset.index = i;
+                carta.innerHTML = `
+                    <div class="brillo-fondo"></div>
+                    <div class="borde-brillante"></div>
+                    <div class="carta-interior">
+                        <div class="carta-frente">
+                            <img src="${CONFIG.logoUrl}" alt="Mobitech Group" class="logo-carta-img" loading="lazy" onerror="this.style.display='none'">
+                        </div>
+                        <div class="carta-atras"><span class="premio-texto">${p}</span></div>
+                    </div>
+                `;
+                carta.onclick = () => seleccionarCarta(carta, i);
+                c.appendChild(carta);
+            });
+        }
+
+        function desactivarCartas() {
+            document.querySelectorAll('.carta').forEach(c => c.classList.add('carta-desactivada'));
+        }
+
+        // ANIMACIONES
+        function limpiarAnimaciones() {
+            document.getElementById('lluviaEmojis').innerHTML = '';
+            document.getElementById('confeti').innerHTML = '';
+            document.getElementById('corneta').classList.remove('activa');
+        }
+
+        function lluviaEmojis(emoji, duracion = 3000) {
+            const contenedor = document.getElementById('lluviaEmojis');
+            const cantidad = 50;
+            for (let i = 0; i < cantidad; i++) {
+                const el = document.createElement('div');
+                el.className = 'emoji-lluvia';
+                el.textContent = emoji;
+                el.style.left = Math.random() * 100 + '%';
+                el.style.animationDelay = Math.random() * (duracion / 1000) + 's';
+                el.style.fontSize = (20 + Math.random() * 18) + 'px';
+                contenedor.appendChild(el);
+            }
+            setTimeout(() => contenedor.innerHTML = '', duracion);
+        }
+
+        function lanzarConfeti() {
+            const contenedor = document.getElementById('confeti');
+            const cantidad = 120;
+            for (let i = 0; i < cantidad; i++) {
+                const el = document.createElement('div');
+                el.className = 'confeti-pieza';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.animationDelay = Math.random() * 0.6 + 's';
+                el.style.width = (6 + Math.random() * 10) + 'px';
+                el.style.height = (12 + Math.random() * 12) + 'px';
+                el.style.background = `hsl(${Math.random() * 360}, 90%, 60%)`;
+                contenedor.appendChild(el);
+            }
+            setTimeout(() => contenedor.innerHTML = '', 2000);
+        }
+
+        function mostrarCornetaYConfeti() {
+            const corneta = document.getElementById('corneta');
+            corneta.classList.add('activa');
+            setTimeout(() => corneta.classList.remove('activa'), 350);
+            setTimeout(() => corneta.classList.add('activa'), 700);
+            setTimeout(() => corneta.classList.remove('activa'), 1050);
+            setTimeout(() => corneta.classList.add('activa'), 1400);
+            setTimeout(() => corneta.classList.remove('activa'), 1750);
+            lanzarConfeti();
+            setTimeout(() => lanzarConfeti(), 600);
+            setTimeout(() => lanzarConfeti(), 1200);
+        }
+
+        function obtenerEmojiPremio(premio) {
+            if (premio.includes('$10.000')) return '💰';
+            if (premio.includes('$20.000')) return '💵';
+            if (premio.includes('$50.000')) return '👑';
+            return '🎉';
+        }
+
+        async function seleccionarCarta(carta, idx) {
+            if (yaJuego) return;
+            yaJuego = true;
+            desactivarCartas();
+
+            const premio = premiosMezclados[idx];
+            const emojiPremio = obtenerEmojiPremio(premio);
+            const esPremioMayor = premio.includes('$50.000');
+
+            carta.classList.add('seleccionada');
+            carta.querySelector('.premio-texto').classList.add('premio-ganado');
+
+            if (esPremioMayor) {
+                mostrarCornetaYConfeti();
+            } else {
+                lluviaEmojis(emojiPremio, 3000);
+            }
+
+            setTimeout(() => {
+                document.querySelectorAll('.carta').forEach((c, i) => {
+                    if (i !== idx) {
+                        setTimeout(() => c.classList.add('carta-volteada'), 200 + (i * 50));
+                    }
+                });
+            }, 600);
+
+            const f = new Date();
+            const registro = {
+                usuario: nombreUsuario,
+                documento: documentoUsuario,
+                fecha: formatearFecha(f),
+                hora: formatearHora(f),
+                premio: premiosMezclados[idx]
+            };
+
+            await guardarRegistro(registro);
+
+            setTimeout(() => {
+                const res = document.getElementById('resultadoFinal');
+                res.innerHTML = `🎉 ¡Felicidades, ${nombreUsuario}!<br>Ganaste: <strong>${premiosMezclados[idx]}</strong> 🎉`;
+                res.classList.add('visible');
+                document.getElementById('textoEstado').textContent = '✅ Premio registrado correctamente';
+            }, 900);
+        }
+    </script>
+</body>
+</html>
