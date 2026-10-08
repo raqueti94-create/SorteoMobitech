@@ -44,30 +44,30 @@
         <button class="btn-secundario" onclick="volverInicio()">← Volver al Inicio</button>
     </div>
 
-   <div id="pantallaAdmin" class="pantalla">
+   <div id="pantallaAdmin" class="pantalla oculto">
     <h2>📋 Panel de Administración</h2>
-    
-    <!-- Selector de Mes -->
-    <div style="margin-bottom: 15px;">
-        <label style="font-weight: bold; margin-right: 10px;">📅 Ver mes:</label>
-        <select id="selectorMes" onchange="cambiarMes()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px;">
+
+    <!-- Selector de mes -->
+    <div style="margin: 15px 0;">
+        <label>📅 Ver mes:</label>
+        <select id="selectorMes" onchange="cambiarMes()">
             <option value="">Cargando...</option>
         </select>
     </div>
 
-    <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-        <button onclick="exportarExcel()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📥 Exportar a Excel
-        </button>
+    <!-- Botones y total -->
+    <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <button onclick="exportarExcel()">📥 Exportar a Excel</button>
         <button class="btn-peligro" onclick="confirmarReinicio()">🗑️ Reiniciar Mes</button>
-        <div id="totalPremios" style="margin-left: auto; padding: 10px 20px; background: #fef3c7; border-radius: 6px; font-weight: bold; color: #92400e;">
-            💰 Total premios: $0
+        <div id="totalPremios" style="margin-left: auto; font-weight: bold;">
+            💰 Total premios: $0 COP
         </div>
     </div>
 
-    <table id="tablaAdmin">
+    <!-- Tabla -->
+    <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse;">
         <thead>
-            <tr>
+            <tr style="background:#f0f0f0;">
                 <th>Nombre</th>
                 <th>Documento</th>
                 <th>Fecha</th>
@@ -75,10 +75,15 @@
                 <th>Premio</th>
             </tr>
         </thead>
-        <tbody id="cuerpoTabla"></tbody>
+        <tbody id="cuerpoTabla">
+            <tr>
+                <td colspan="5" style="text-align:center; color:#888; padding:20px;">Cargando...</td>
+            </tr>
+        </tbody>
     </table>
-    
-    <button class="btn-secundario" onclick="volverInicio()">🔙 Volver al inicio</button>
+
+    <br>
+    <button onclick="volverInicio()">🔙 Volver al inicio</button>
 </div>
 
     <!-- MODAL DE LOGIN -->
