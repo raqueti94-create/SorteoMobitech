@@ -13,7 +13,7 @@ const CONFIG = {
         '💵 $20.000 COP',
         '🥇 $30.000 COP',
         '🏆 $40.000 COP',
-        '👑 $50.000 COP'
+        '💎 $50.000 COP'
     ],
     firebase: {
         apiKey: "AIzaSyDUyRp66r4AwqVfT-1t8DTGPxoPrJf73Uo",
